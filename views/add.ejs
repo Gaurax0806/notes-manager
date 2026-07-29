@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Note</title>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+    <div class="form-page">
+        <div class="form-card">
+            <h1>📝 Add New Note</h1>
+            <p>Write down something important before you forget it.</p>
+
+            <form action="/add" method="POST">
+                <label>Title</label>
+                <input
+                    type="text"
+                    name="title"
+                    placeholder="e.g. DBMS Unit 1"
+                    required
+                />
+
+                <label>Content</label>
+                <textarea
+                    name="content"
+                    placeholder="Write your note here..."
+                    required
+                ></textarea>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">💾 Save Note</button>
+                    <a href="/" class="btn secondary">← Back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+
+    <!-- form banaya hn action ka mtlb hn ki jab form submit hoga to data '/add' route pe 
+    bheja jayega aur method POST ka mtlb hn ki data ko server pe bhejne ke liye POST request use hogi -->
+    <!-- post ka mtlb hn ki data ko server pe bhejne ke liye POST request use hogi
+    mtlb frontend to server data bhejne ke liye POST request use hogi -->

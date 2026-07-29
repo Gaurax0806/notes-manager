@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notes Manager</title>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+    <nav>
+        <h2>Notes Manager</h2>
+        <a href="/add">+ Add Note</a>
+    </nav>
+    <div class="container">
+        <header class="hero">
+            <h1>📒 Notes Manager</h1>
+            <p>Simple full-stack notes app built with Express + EJS</p>
+            <a href="/add" class="btn">+ Add New Note</a>
+        </header>
+
+        <section class="notes-section">
+            <div class="section-header">
+                <h2>Your Notes</h2>
+                <span class="count"><%= notes.length %> notes</span>
+            </div>
+
+            <% if(notes.length === 0){ %>
+                <div class="empty-state">
+                    <h3>No notes yet</h3>
+                    <p>Click "Add New Note" to create your first note.</p>
+                </div>
+            <% } %>
+
+            <div class="notes-grid">
+                <% notes.forEach(note => { %>
+                    <div class="note-card">
+                        <div class="note-top">
+                            <span class="note-tag">NOTE</span>
+                        </div>
+
+                        <h3><%= note.title %></h3>
+                        <p><%= note.content %></p>
+                        <small>
+                            Created:<%= new Date(note.createdAt).toLocaleString() %>
+                        </small>
+                        <div class="btns">
+                            <form action="/edit/<%= note._id %>" method="GET">
+                                <button type="submit" class="edit-btn">✏️ Edit</button>
+                            </form>
+                            <form action="/delete/<%= note._id %>" method="POST">
+                                <button type="submit" class="delete-btn" onclick="return confirm('Delete this note?')">
+                                    🗑 Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                <% }) %>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
