@@ -171,5 +171,5 @@ app.post("/delete/:id", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("app started at localhost:3000");
+  console.log(`app started at localhost:${PORT}`);
 });
