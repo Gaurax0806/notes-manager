@@ -14,10 +14,14 @@ const noteSchema = new mongoose.Schema({
     required: true, // required ka mtlb hn ki content field ko empty nahi chhod sakte
   },
 
+  pdf: {
+    type: String, // type ka mtlb hn ki pdf field ka data type String hoga
+  },
+
   createdAt: {
     type: Date, // type ka mtlb hn ki createdAt field ka data type Date hoga
-    default: Date.now, 
-    // default ka mtlb hn ki agar createdAt field ko empty chhod diya to usme 
+    default: Date.now,
+    // default ka mtlb hn ki agar createdAt field ko empty chhod diya to usme
     // current date and time automatically aa jayega
   },
 });

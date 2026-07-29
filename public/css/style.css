@@ -274,6 +274,22 @@ nav a{
 nav a:hover{
     color:#3b82f6;
 }
+.pdf-btn{
+    display:inline-block;
+    margin-top:12px;
+    padding:8px 14px;
+    background:#16a34a;
+    color:white;
+    text-decoration:none;
+    border-radius:8px;
+    font-size:14px;
+    transition:0.2s ease;
+}
+
+.pdf-btn:hover{
+    background:#22c55e;
+    transform:translateY(-2px);
+}
 /* Mobile */
 @media (max-width: 600px) {
     .hero h1 {

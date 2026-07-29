@@ -40,6 +40,11 @@
 
                         <h3><%= note.title %></h3>
                         <p><%= note.content %></p>
+                        <% if(note.pdf){ %>
+                        <a href="<%= note.pdf %>" target="_blank" class="pdf-btn">
+                        📄 View PDF
+                        </a>
+                        <% } %>
                         <small>
                             Created:<%= new Date(note.createdAt).toLocaleString() %>
                         </small>

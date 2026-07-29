@@ -4,6 +4,34 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 
+// multer ka mtlb hn ki ye ek middleware hai jo file upload ko handle karta hai
+const multer = require("multer");
+// aur ya path ka mtlb hn ki ye ek module hai jo file path ko handle karta hai
+const path = require("path");
+
+
+
+// configure storage for uploaded files
+const storage = multer.diskStorage({
+
+    // where file will be saved
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+
+    // file name
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+// create upload middleware
+const upload = multer({ storage });
+
+
+
+
+
 // isse hum Note model ko import karenge jo models/Note.js me define kiya gaya hai
 const Note = require("./models/Note");
 
@@ -27,6 +55,9 @@ mongoose.connect(process.env.MONGO_URI)
 // static files
 // Express ko batata hai ki hum public folder ke andar ki static files (CSS, JS, images) ko serve karna chahte hain
 app.use(express.static("public"));
+
+// make uploaded files accessible from browser
+app.use("/uploads", express.static("uploads"));
 
 // Express ko batata hai ki hum EJS template engine use kar rahe hain
 // ab hum views folder ke andar ki .ejs files ko res.render() se bhej sakte hain
@@ -105,16 +136,26 @@ app.get("/add", (req, res) => {
 // form ka data receive karne wala route
 // app.post() ka matlab hai ki ye route POST requests ko handle karega
 // jab browser form ka data server ko bhejega tab ye function execute hoga
-app.post("/add", async(req, res) => {
+app.post("/add", upload.single("pdf"), async (req, res) => {
   console.log(req.body);
   // when form is submitted, the data is received in req.body
   // after that we can store the data in notes array
-    const { title, content } = req.body;
-    // note ko create karne ke liye Note model ka use karke database me document create karenge
-    await Note.create({
-      title: title,
-      content: content,
-    });
+
+  // default empty path
+  let pdfPath = "";
+
+  // if user uploaded a file
+  if (req.file) {
+    pdfPath = "/uploads/" + req.file.filename;
+  }
+
+  const { title, content } = req.body;
+  // note ko create karne ke liye Note model ka use karke database me document create karenge
+  await Note.create({
+    title: title,
+    content: content,
+    pdf: pdfPath,
+  });
 
   // redirect to home page after adding note
   res.redirect("/");
