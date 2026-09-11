@@ -13,7 +13,7 @@
 
             <h1>✏️ Edit Note</h1>
 
-            <form action="/edit/<%= note._id %>" method="POST">
+            <form action="/edit/<%= note._id %>" method="POST" enctype="multipart/form-data">
 
                 <label>Title</label>
                 <input
@@ -26,7 +26,20 @@
                 <label>Content</label>
                 <textarea name="content" required><%= note.content %></textarea>
 
-                <div class="form-actions">
+                <label>Upload New PDF (replaces existing if any)</label>
+                <input
+                    type="file"
+                    name="pdf"
+                    accept=".pdf"
+                >
+
+                <% if(note.pdf){ %>
+                    <div style="margin-top: 10px;">
+                        <a href="<%= note.pdf %>" target="_blank" class="pdf-btn">📄 View Current PDF</a>
+                    </div>
+                <% } %>
+
+                <div class="form-actions" style="margin-top: 20px;">
                     <button type="submit" class="btn">💾 Save Changes</button>
                     <a href="/" class="btn secondary">← Cancel</a>
                 </div>

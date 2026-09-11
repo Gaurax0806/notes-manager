@@ -1,214 +1,187 @@
-// It will take .env file and config() will load the environment variables from .env file into process.env
-// process.env is a global object that contains all the environment variables of the current process
 require("dotenv").config();
 const express = require("express");
 const app = express();
-
-// multer ka mtlb hn ki ye ek middleware hai jo file upload ko handle karta hai
 const multer = require("multer");
-// aur ya path ka mtlb hn ki ye ek module hai jo file path ko handle karta hai
 const path = require("path");
+const fs = require("fs");
+const Note = require("./models/Note");
 
-
-
-// configure storage for uploaded files
+// Configure storage for uploaded files with security and uniqueness
 const storage = multer.diskStorage({
-
-    // where file will be saved
     destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, "uploads");
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
         cb(null, "uploads/");
     },
-
-    // file name
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
-// create upload middleware
-const upload = multer({ storage });
+// Multer upload middleware with strict PDF file filtering
+const upload = multer({ 
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === "application/pdf") {
+            cb(null, true);
+        } else {
+            cb(new Error("Only PDF files are allowed!"), false);
+        }
+    }
+});
 
+const port = process.env.PORT || 3000;
 
-
-
-
-// isse hum Note model ko import karenge jo models/Note.js me define kiya gaya hai
-const Note = require("./models/Note");
-
-const port = 3000;
-
-// isse hum MongoDB ke saath connect karenge
-// phle hum mongoose package ko import karenge
 const mongoose = require("mongoose");
 
-// mongoose.connect() ka use karke hum MongoDB ke saath connect karenge express server ko
 mongoose.connect(process.env.MONGO_URI)
-    // agar connection successful hua to then() function chalega
   .then(() => {
     console.log("MongoDB Connected");
   })
-  // nhi to catch() function chalega aur error print hoga
   .catch((err) => {
-    console.log(err);
+    console.log("MongoDB connection error:", err);
   });
 
-// static files
-// Express ko batata hai ki hum public folder ke andar ki static files (CSS, JS, images) ko serve karna chahte hain
+// Static files
 app.use(express.static("public"));
-
-// make uploaded files accessible from browser
 app.use("/uploads", express.static("uploads"));
 
-// Express ko batata hai ki hum EJS template engine use kar rahe hain
-// ab hum views folder ke andar ki .ejs files ko res.render() se bhej sakte hain
-// ya batata hn ki hum EJS template engine use kar rahe hain
 app.set("view engine", "ejs");
 
-// temporary storage for notes
-// notes ko store karne ke liye ek array banaya hai
-// const notes = [
-//   {
-//     title: "My First Note",
-//     content: "This is the content of my first note.",
-//   },
-//   {
-//     title: "My Second Note",
-//     content: "This is the content of my second note.",
-//   },
-//   {
-//     title: "My Third Note",
-//     content: "This is the content of my third note.",
-//   },
-//   {
-//     title: "My Fourth Note",
-//     content: "This is the content of my fourth note.",
-//   },
-//   {
-//     title: "My Fifth Note",
-//     content: "This is the content of my fifth note.",
-//   },
-//   {
-//     title: "My Sixth Note",
-//     content: "This is the content of my sixth note.",
-//   },
-//   {
-//     title: "My Seventh Note",
-//     content: "This is the content of my seventh note.",
-//   },
-// ];
-
-// form se bheja gaya data read karne ke liye
-// ya ek middle ware hai jo form data ko parse karta hai aur req.body me store karta hai
-// ya kam kaisa krta hai ki agar form se data bheja gaya hai to usko read karne ke liye ye middleware use hota hai
 app.use(express.urlencoded({ extended: true }));
 
-// Browser jab localhost:3000 open karta hai
-// tab backend ko GET request bhejta hai.
-// app.get("/", (req, res) => {}) ka matlab hai:
-// agar user home page '/' maange, to ye function chalega
-// aur backend browser ko response bhejega.
-
-// Route ka kaam hai specific URL ke liye code chalana
-// agar browser '/' (home page) request kare
-// to ye function execute hoga
-app.get("/", async(req, res) => {
-  console.log("got the request from home page '/' ");
-  // await ka mtlb hn ki ye function asynchronous hai aur ye Note.find() ka result ka wait karega
-  // “Database se saare notes lao.”
-//   note.find () ka mtlb hn ki Note model ke saare documents ko find karo
-// .sort {-1} ka mtlb hn ki saare notes ko descending order me sort karo mtlb jo 
-// phle bna wo phle 
-  const notes = await Note.find().sort({ createdAt: -1 });
-  // for (let i = 0; i < notes.length; i++) {
-  //   console.log(notes[i]);
-  // }
-
-  // res is used to send data to frontend by server
-  // req is used to get data from frontend to server
-  res.render("index", { notes });
+// Home route with error handling
+app.get("/", async (req, res) => {
+  try {
+    const notes = await Note.find().sort({ createdAt: -1 });
+    res.render("index", { notes });
+  } catch (err) {
+    console.error("Error fetching notes:", err);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
+// Add note form route
 app.get("/add", (req, res) => {
-  // console.log("got the request from add page '/add' ");
   res.render("add");
 });
 
-// form ka data receive karne wala route
-// app.post() ka matlab hai ki ye route POST requests ko handle karega
-// jab browser form ka data server ko bhejega tab ye function execute hoga
+// Handle adding a note with PDF upload and error handling
 app.post("/add", upload.single("pdf"), async (req, res) => {
-  console.log(req.body);
-  // when form is submitted, the data is received in req.body
-  // after that we can store the data in notes array
+  try {
+    let pdfPath = "";
+    if (req.file) {
+      pdfPath = "/uploads/" + req.file.filename;
+    }
 
-  // default empty path
-  let pdfPath = "";
+    const title = req.body.title ? req.body.title.trim() : "";
+    const content = req.body.content ? req.body.content.trim() : "";
 
-  // if user uploaded a file
-  if (req.file) {
-    pdfPath = "/uploads/" + req.file.filename;
-  }
+    if (!title || !content) {
+      if (req.file) {
+        fs.unlink(path.join(__dirname, req.file.path), () => {});
+      }
+      return res.status(400).send("Title and content are required.");
+    }
 
-  const { title, content } = req.body;
-  // note ko create karne ke liye Note model ka use karke database me document create karenge
-  await Note.create({
-    title: title,
-    content: content,
-    pdf: pdfPath,
-  });
-
-  // redirect to home page after adding note
-  res.redirect("/");
-  // In Express, you can only call a response method
-  //  (res.send, res.redirect, res.render, res.json, etc.) once per request.
-  // ek bar mn ek hi response bhej sakte hn, isliye res.redirect() ke baad res.send() nahi use kar sakte hn
-  // res.send("Note received successfully ✅");
-});
-
-
-// route to open edit page
-app.get("/edit/:id", async (req, res) => {
-
-    // get note id from URL
-    const noteId = req.params.id;
-
-    // find note from MongoDB
-    const note = await Note.findById(noteId);
-
-    // send note data to edit.ejs
-    res.render("edit", { note });
-});
-
-
-// route to update note
-app.post("/edit/:id", async (req, res) => {
-
-    // get updated data from form
-    const { title, content } = req.body;
-
-    // update note in MongoDB
-    await Note.findByIdAndUpdate(req.params.id, {
-        title: title,
-        content: content
+    await Note.create({
+      title: title,
+      content: content,
+      pdf: pdfPath,
     });
 
-    // go back to home page
     res.redirect("/");
+  } catch (err) {
+    console.error("Error adding note:", err);
+    if (req.file) {
+      fs.unlink(path.join(__dirname, req.file.path), () => {});
+    }
+    res.status(500).send(err.message || "Error adding note");
+  }
 });
 
+// Route to open edit page
+app.get("/edit/:id", async (req, res) => {
+  try {
+    const noteId = req.params.id;
+    const note = await Note.findById(noteId);
+    if (!note) {
+      return res.status(404).send("Note not found");
+    }
+    res.render("edit", { note });
+  } catch (err) {
+    console.error("Error fetching note for edit:", err);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
-// Toh Express sochat ki browser se bilkul exact word "id" aane wala hai (/delete/id).
-// Jab browser real MongoDB ID bhejata (jaise /delete/65b2f8a9...), 
-// toh Express match nahi kar pata aur 404 Not Found error de deta!
+// Route to update note with optional PDF replacement and cleanup
+app.post("/edit/:id", upload.single("pdf"), async (req, res) => {
+  try {
+    const note = await Note.findById(req.params.id);
+    if (!note) {
+      if (req.file) {
+        fs.unlink(path.join(__dirname, req.file.path), () => {});
+      }
+      return res.status(404).send("Note not found");
+    }
+
+    const title = req.body.title ? req.body.title.trim() : note.title;
+    const content = req.body.content ? req.body.content.trim() : note.content;
+    let pdfPath = note.pdf;
+
+    if (req.file) {
+      // Delete old PDF from disk if it exists
+      if (note.pdf) {
+        const oldPdfFullPath = path.join(__dirname, note.pdf);
+        if (fs.existsSync(oldPdfFullPath)) {
+          fs.unlink(oldPdfFullPath, (unlinkErr) => {
+            if (unlinkErr) console.error("Error deleting old PDF file:", unlinkErr);
+          });
+        }
+      }
+      pdfPath = "/uploads/" + req.file.filename;
+    }
+
+    note.title = title;
+    note.content = content;
+    note.pdf = pdfPath;
+    await note.save();
+
+    res.redirect("/");
+  } catch (err) {
+    console.error("Error updating note:", err);
+    if (req.file) {
+      fs.unlink(path.join(__dirname, req.file.path), () => {});
+    }
+    res.status(500).send(err.message || "Error updating note");
+  }
+});
+
+// Route to delete note and its associated PDF file from disk
 app.post("/delete/:id", async (req, res) => {
-  console.log("DELETE ROUTE HIT");
-  console.log(req.params.id);
-
-  await Note.findByIdAndDelete(req.params.id);
-
-  res.redirect("/");
+  try {
+    const note = await Note.findById(req.params.id);
+    if (note) {
+      // Delete associated PDF file if it exists
+      if (note.pdf) {
+        const pdfFullPath = path.join(__dirname, note.pdf);
+        if (fs.existsSync(pdfFullPath)) {
+          fs.unlink(pdfFullPath, (unlinkErr) => {
+            if (unlinkErr) console.error("Error deleting PDF file:", unlinkErr);
+          });
+        }
+      }
+      await Note.findByIdAndDelete(req.params.id);
+    }
+    res.redirect("/");
+  } catch (err) {
+    console.error("Error deleting note:", err);
+    res.status(500).send("Internal Server Error");
+  }
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
