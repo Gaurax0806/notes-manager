@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Note</title>
+    <title>Add Note - Notes Manager</title>
     <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -21,19 +21,30 @@
                     required
                 />
 
+                <label>Category</label>
+                <select name="category" style="width: 100%; padding: 14px 18px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; margin-bottom: 22px; font-size: 1rem; background: rgba(15, 23, 42, 0.7); color: #f8fafc; font-family: inherit;">
+                    <option value="General" style="background: #0f172a; color: #f8fafc;">General</option>
+                    <option value="Study" style="background: #0f172a; color: #f8fafc;">Study</option>
+                    <option value="Work" style="background: #0f172a; color: #f8fafc;">Work</option>
+                    <option value="Personal" style="background: #0f172a; color: #f8fafc;">Personal</option>
+                    <option value="Ideas" style="background: #0f172a; color: #f8fafc;">Ideas</option>
+                </select>
+
                 <label>Content</label>
                 <textarea
                     name="content"
                     placeholder="Write your note here..."
                     required
                 ></textarea>
-                <label>Upload PDF</label>
+
+                <label>Upload PDF (optional)</label>
                 <input
                     type="file"
                     name="pdf"
                     accept=".pdf"
                 >
-                <div class="form-actions">
+
+                <div class="form-actions" style="margin-top: 20px;">
                     <button type="submit" class="btn">💾 Save Note</button>
                     <a href="/" class="btn secondary">← Back</a>
                 </div>
@@ -42,8 +53,3 @@
     </div>
 </body>
 </html>
-
-    <!-- form banaya hn action ka mtlb hn ki jab form submit hoga to data '/add' route pe 
-    bheja jayega aur method POST ka mtlb hn ki data ko server pe bhejne ke liye POST request use hogi -->
-    <!-- post ka mtlb hn ki data ko server pe bhejne ke liye POST request use hogi
-    mtlb frontend to server data bhejne ke liye POST request use hogi -->

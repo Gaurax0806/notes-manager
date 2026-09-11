@@ -9,13 +9,45 @@
 <body>
     <nav>
         <h2>Notes Manager</h2>
-        <a href="/add">+ Add Note</a>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <% if(typeof user !== 'undefined' && user) { %>
+                <span style="color: #94a3b8; font-weight: 600;">Hello, <%= user.username %> 👋</span>
+                <a href="/logout" class="btn secondary" style="padding: 8px 16px; border-radius: 999px; font-size: 0.85rem;">Logout</a>
+            <% } %>
+            <a href="/add">+ Add Note</a>
+        </div>
     </nav>
+
     <div class="container">
         <header class="hero">
             <h1>📒 Notes Manager</h1>
-            <p>Simple full-stack notes app built with Express + EJS</p>
-            <a href="/add" class="btn">+ Add New Note</a>
+            <p>Secure full-stack notes app with PDF uploads, categories & search</p>
+            
+            <!-- Search & Filter Form -->
+            <form action="/" method="GET" style="display: flex; gap: 10px; max-width: 650px; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
+                <input 
+                    type="text" 
+                    name="search" 
+                    placeholder="Search notes by title or content..." 
+                    value="<%= typeof search !== 'undefined' ? search : '' %>"
+                    style="flex: 1; min-width: 240px; margin-bottom: 0;"
+                >
+                <select 
+                    name="category" 
+                    style="width: 150px; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; background: rgba(15,23,42,0.9); color: #f8fafc; font-family: inherit;"
+                >
+                    <option value="">All Categories</option>
+                    <option value="General" <%= typeof category !== 'undefined' && category === 'General' ? 'selected' : '' %>>General</option>
+                    <option value="Study" <%= typeof category !== 'undefined' && category === 'Study' ? 'selected' : '' %>>Study</option>
+                    <option value="Work" <%= typeof category !== 'undefined' && category === 'Work' ? 'selected' : '' %>>Work</option>
+                    <option value="Personal" <%= typeof category !== 'undefined' && category === 'Personal' ? 'selected' : '' %>>Personal</option>
+                    <option value="Ideas" <%= typeof category !== 'undefined' && category === 'Ideas' ? 'selected' : '' %>>Ideas</option>
+                </select>
+                <button type="submit" class="btn" style="margin-bottom: 0; padding: 14px 20px;">🔍 Filter</button>
+                <% if((typeof search !== 'undefined' && search) || (typeof category !== 'undefined' && category)) { %>
+                    <a href="/" class="btn secondary" style="margin-bottom: 0; padding: 14px 18px; text-decoration: none;">Reset</a>
+                <% } %>
+            </form>
         </header>
 
         <section class="notes-section">
@@ -26,40 +58,47 @@
 
             <% if(notes.length === 0){ %>
                 <div class="empty-state">
-                    <h3>No notes yet</h3>
-                    <p>Click "Add New Note" to create your first note.</p>
+                    <h3>No notes found</h3>
+                    <p>Try adjusting your search filter or click "Add New Note" to create one.</p>
                 </div>
             <% } %>
 
             <div class="notes-grid">
                 <% notes.forEach(note => { %>
-                    <div class="note-card">
-                        <div class="note-top">
-                            <span class="note-tag">NOTE</span>
+                    <div class="note-card" style="<%= note.isPinned ? 'border-color: #818cf8; background: rgba(30, 27, 75, 0.4);' : '' %>">
+                        <div class="note-top" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="note-tag"><%= note.category || 'General' %></span>
+                            <form action="/pin/<%= note._id %>" method="POST" style="margin: 0;">
+                                <button type="submit" style="background: none; border: none; cursor: pointer; font-size: 1.1rem;" title="<%= note.isPinned ? 'Unpin note' : 'Pin note' %>">
+                                    <%= note.isPinned ? '📌' : '📍' %>
+                                </button>
+                            </form>
                         </div>
 
                         <h3><%= note.title %></h3>
                         <p><%= note.content %></p>
+                        
                         <% if(note.pdf){ %>
-                        <a href="<%= note.pdf %>" target="_blank" class="pdf-btn">
-                        📄 View PDF
-                        </a>
+                            <a href="<%= note.pdf %>" target="_blank" class="pdf-btn">
+                                📄 View PDF
+                            </a>
                         <% } %>
+
                         <small>
-                            Created:<%= new Date(note.createdAt).toLocaleString() %>
+                            Created: <%= new Date(note.createdAt).toLocaleString() %>
                         </small>
+
                         <div class="btns">
-                            <form action="/edit/<%= note._id %>" method="GET">
-                                <button type="submit" class="edit-btn">✏️ Edit</button>
+                            <form action="/edit/<%= note._id %>" method="GET" style="flex: 1;">
+                                <button type="submit" class="edit-btn" style="width: 100%;">✏️ Edit</button>
                             </form>
-                            <form action="/delete/<%= note._id %>" method="POST">
-                                <button type="submit" class="delete-btn" onclick="return confirm('Delete this note?')">
+                            <form action="/delete/<%= note._id %>" method="POST" style="flex: 1;">
+                                <button type="submit" class="delete-btn" onclick="return confirm('Delete this note?')" style="width: 100%;">
                                     🗑 Delete
                                 </button>
                             </form>
                         </div>
                     </div>
-
                 <% }) %>
             </div>
         </section>

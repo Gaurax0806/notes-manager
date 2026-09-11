@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Notes Manager</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="form-page">
+        <div class="form-card">
+            <h1>👋 Welcome Back</h1>
+            <p>Login to access your notes and PDFs.</p>
+
+            <% if(typeof error !== 'undefined' && error) { %>
+                <div style="background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); padding: 12px; border-radius: 10px; margin-bottom: 20px; font-weight: 600;">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <form action="/login" method="POST">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="e.g. gaurav@example.com" required>
+
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter your password" required>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Login</button>
+                    <a href="/signup" class="btn secondary">Need an account? Sign Up</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
